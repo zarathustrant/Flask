@@ -5,6 +5,11 @@ app = Flask(__name__)
 # Store the latest location data
 latest_location = {}
 
+# Root Route
+@app.route('/')
+def index():
+    return "Welcome to the Flask App"
+
 # Route to receive location data from the iOS app
 @app.route('/api/location', methods=['POST'])
 def receive_location():
@@ -24,6 +29,3 @@ def get_location():
         return jsonify(latest_location)
     else:
         return jsonify({"error": "No location data available"}), 404
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
