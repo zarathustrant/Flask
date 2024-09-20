@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Location Map</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        // Initialize the map and set a default view (you can adjust the lat/lng)
+        const map = L.map('map').setView([6.2970, 5.5925], 13);
+
+        // Add the OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(map);
+
+        // Marker to show the user's location (default position)
+        let userMarker = L.marker([6.2970, 5.5925]).addTo(map);
+
+        // Function to fetch the latest location data from the Flask API
+        function fetchLocation() {
+            fetch('https://iosflask.onrender.com/api/location')  // Replace with your Flask API URL
+                .then(response => response.json())
+                .then(data => {
+                    if (data.latitude && data.longitude) {
+                        const lat = data.latitude;
+                        const lng = data.longitude;
+                        const readableTime = data.readable_time || '';
+
+                        // Update marker position and popup with timestamp
+                        userMarker.setLatLng([lat, lng])
+                                  .bindPopup(`User Location: ${lat}, ${lng} <br> Timestamp: ${readableTime}`)
+                                  .openPopup();
+
+                        // Center the map on the new location
+                        map.setView([lat, lng], 13);
+                    } else {
+                        console.log("No location data available");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching location:', error);
+                });
+        }
+
+        // Fetch location every 5 seconds
+        setInterval(fetchLocation, 5000);
+
+        // Initial fetch to load the location
+        fetchLocation();
+    </script>
+</body>
+</html>
