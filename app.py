@@ -25,11 +25,23 @@ latest_location = {}
 @app.route('/api/location', methods=['POST'])
 def receive_location():
     data = request.get_json()
+
     if 'latitude' in data and 'longitude' in data and 'timestamp' in data:
+        # Convert Unix timestamp to human-readable format
+        timestamp = data['timestamp']
+        readable_time = datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+        # Update the latest location with the converted timestamp
         global latest_location
-        latest_location = data
+        latest_location = {
+            'latitude': data['latitude'],
+            'longitude': data['longitude'],
+            'timestamp': data['timestamp'],  # Original timestamp
+            'readable_time': readable_time   # Human-readable timestamp
+        }
+
         print(f"Received location: {latest_location}")
-        return jsonify({"message": "Location received"}), 200
+        return jsonify({"message": "Location received", "readable_time": readable_time}), 200
     else:
         return jsonify({"error": "Invalid data"}), 400
 
@@ -40,6 +52,7 @@ def get_location():
         return jsonify(latest_location)
     else:
         return jsonify({"error": "No location data available"}), 404
+        
 @app.route('/update_map_view', methods=['POST'])
 def update_map_view():
     try:
