@@ -22,27 +22,66 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <script>
-        // Initialize the map centered on the latest location from the Flask app
-        const initialLat = {{ location['latitude'] }};
-        const initialLng = {{ location['longitude'] }};
-        const map = L.map('map').setView([initialLat, initialLng], 13);
+        // Initialize the map with a default view
+        const map = L.map('map').setView([6.2970, 5.5925], 13);
 
-        // Add OpenStreetMap tiles to the map
+        // Add the OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19
         }).addTo(map);
 
-        // Add a marker for the user's latest location
-        const userMarker = L.marker([initialLat, initialLng]).addTo(map)
-            .bindPopup('Latest Location: ' + initialLat + ', ' + initialLng)
-            .openPopup();
+        // Marker to show the user's location (default position)
+        let userMarker = L.marker([6.2970, 5.5925]).addTo(map);
 
-        // Add GeoJSON layers to the map
-        const geojsonLayers = {{ geojson_layers | tojson }};
-        geojsonLayers.forEach(layer => {
-            const geojsonData = layer.geojson_data;
-            L.geoJSON(geojsonData).addTo(map).bindPopup('Layer: ' + layer.layer_name);
-        });
+        // Function to fetch the latest location data from the Flask API
+        function fetchLocation() {
+            fetch('https://iosflask.onrender.com/api/location')  // Replace with your Flask API URL
+                .then(response => response.json())
+                .then(data => {
+                    if (data.latitude && data.longitude) {
+                        const lat = data.latitude;
+                        const lng = data.longitude;
+                        const readableTime = data.readable_time || '';
+
+                        // Update marker position and popup with timestamp
+                        userMarker.setLatLng([lat, lng])
+                                  .bindPopup(`User Location: ${lat}, ${lng} <br> Timestamp: ${readableTime}`)
+                                  .openPopup();
+
+                        // Center the map on the new location
+                        map.setView([lat, lng], 13);
+                    } else {
+                        console.log("No location data available");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching location:', error);
+                });
+        }
+
+        // Fetch location every 5 seconds
+        setInterval(fetchLocation, 5000);
+
+        // Fetch GeoJSON layers from the Flask API
+        function fetchGeoJsonLayers() {
+            fetch('/api/geojson_layers')  // Fetching the GeoJSON layers from Flask
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(layer => {
+                        const geojsonData = layer.geojson_data;
+                        L.geoJSON(geojsonData).addTo(map).bindPopup('Layer: ' + layer.layer_name);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching GeoJSON layers:', error);
+                });
+        }
+
+        // Fetch the GeoJSON layers when the page loads
+        fetchGeoJsonLayers();
+
+        // Initial fetch to load the location
+        fetchLocation();
     </script>
 </body>
 </html>
