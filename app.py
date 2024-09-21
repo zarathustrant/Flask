@@ -82,6 +82,19 @@ def get_layers():
 
     return jsonify(combined)
 
+# Route to fetch and print GeoJSON file names
+@app.route('/api/geojson_names', methods=['GET'])
+def get_geojson_names():
+    layers = list(layers_collection.find())
+    
+    layer_names = []
+    for layer in layers:
+        layer_name = layer.get('layer_name', 'Unnamed Layer')
+        layer_names.append(layer_name)
+        print(f"GeoJSON Layer Name: {layer_name}")
+
+    return jsonify(layer_names), 200
+
 # Route to fetch a specific GeoJSON layer by layer_id
 @app.route('/layers/<layer_id>', methods=['GET'])
 def get_layer(layer_id):
