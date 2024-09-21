@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet GeoJSON Manager with Custom Controls and Edit Button</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet-mouse-position@1.1.4/leaflet-mouse-position.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <style>
+        #map {
+            height: 100vh;
+        }
+        .sidebar {
+            height: 100vh;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            padding: 15px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 500px;
+            z-index: 1000;
+        }
+        .sidebar h5 {
+            margin-bottom: 15px;
+        }
+        .sidebar .layer-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .sidebar .layer-control button {
+            margin-left: 5px;
+        }
+        #main {
+            margin-left: 500px;
+        }
+        .custom-controls {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+        }
+        .custom-controls ion-icon {
+            font-size: 24px;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+        .zoom-level {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h5>Layers Control</h5>
+    <ul id="layersList" class="list-group"></ul>
+    <button class="btn btn-primary mt-3" id="uploadBtn">Upload GeoJSON</button>
+    
+    <!-- Set View Control Panel -->
+    <div class="custom-view-control mt-3">
+        <label for="latInput">Latitude:</label><br>
+        <input type="text" id="latInput" class="form-control mb-2" placeholder="Enter latitude">
+        
+        <label for="lngInput">Longitude:</label><br>
+        <input type="text" id="lngInput" class="form-control mb-2" placeholder="Enter longitude">
+        
+        <label for="zoomInput">Zoom Level:</label><br>
+        <input type="number" id="zoomInput" class="form-control mb-2" placeholder="Enter zoom level">
+        
+        <button id="setViewBtn" class="btn btn-primary btn-block">Set Map View</button>
+    </div>
+</div>
+
+<div id="main">
+    <div id="map">
+    <!-- Custom zoom and home controls on the map -->
+        <div class="custom-controls">
+            <ion-icon name="add-outline" id="zoomInBtn"></ion-icon>
+            <ion-icon name="remove-outline" id="zoomOutBtn"></ion-icon>
+            <ion-icon name="home-outline" id="homeBtn"></ion-icon>
+            <div class="zoom-level" id="zoomLevel">Zoom: 13</div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for editing layer styles -->
+<div class="modal fade" id="styleModal" tabindex="-1" aria-labelledby="styleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="styleModalLabel">Edit Layer Styles</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Display the layer_id -->
+                <div class="form-group">
+                    <label for="layerId">Layer ID</label>
+                    <input type="text" id="layerId" class="form-control" readonly>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <label for="fillColor">Fill Color</label>
+                    <input type="color" id="fillColor" class="form-control" value="#ff7800">
+                </div>
+                <div class="form-group">
+                    <label for="strokeColor">Stroke Color</label>
+                    <input type="color" id="strokeColor" class="form-control" value="#000000">
+                </div>
+                <div class="form-group">
+                    <label for="weight">Stroke Weight</label>
+                    <input type="number" id="weight" class="form-control" value="2">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="saveStylesBtn">Save Styles</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="geojsonFile" style="display: none;">
+
+<script>
+    // Initialize the map with a default view and disable the default zoom control
+    const map = L.map('map', { zoomControl: false }).setView([6, 5], 13);
+
+    // Base layers
+    const openTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17,
+        attribution: 'Map data: &copy; <a href="https://www.opentopomap.org/">OpenTopoMap</a>'
+    });
+
+    const googleEarthHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: 'Map data: &copy; <a href="https://maps.google.com/">Google</a>'
+    });
+
+    const cartoDBLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
+    });
+
+    // Add default basemap (OpenTopoMap)
+    openTopoMap.addTo(map);
+
+    // Basemap control layer
+    const baseMaps = {
+        "OpenTopoMap": openTopoMap,
+        "Google Earth Hybrid": googleEarthHybrid,
+        "CartoDB Light": cartoDBLight
+    };
+    L.control.layers(baseMaps).addTo(map);
+
+    let currentLayerId = null;
+    let currentLayer = null;
+
+    // Add zoom level display functionality
+    const zoomLevelDisplay = document.getElementById('zoomLevel');
+    function updateZoomDisplay() {
+        zoomLevelDisplay.textContent = 'Zoom: ' + map.getZoom();
+    }
+    updateZoomDisplay();
+
+    // Update zoom level display on zoom change
+    map.on('zoomend', updateZoomDisplay);
+
+    // Custom zoom controls (Ionicons)
+    document.getElementById('zoomInBtn').addEventListener('click', function() {
+        map.zoomIn();
+    });
+
+    document.getElementById('zoomOutBtn').addEventListener('click', function() {
+        map.zoomOut();
+    });
+
+    // Home button functionality (reset to values from MongoDB or default)
+    document.getElementById('homeBtn').addEventListener('click', function() {
+        fetch('http://127.0.0.1:5000/get_map_view')
+        .then(response => response.json())
+        .then(data => {
+            const lat = data.lat || 6;
+            const lng = data.lng || 5;
+            const zoom = data.zoom || 13;
+
+            map.setView([lat, lng], zoom);
+            updateZoomDisplay();
+        })
+        .catch(error => {
+            console.error('Error fetching map view:', error);
+        });
+    });
+
+    // Function to add layers to the map and display the layer name in the control panel
+    function addLayerToMap(layerData) {
+        const geoLayer = L.geoJSON(layerData.geojson_data, {
+            style: layerData.styles
+        }).addTo(map);
+
+        // Create list item for the layer
+        const listItem = document.createElement('li');
+        listItem.className = 'list-group-item layer-control';
+
+        // Layer name display
+        const layerName = document.createElement('span');
+        layerName.textContent = layerData.layer_name;
+        listItem.appendChild(layerName);
+
+        // Create Edit button
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.className = 'btn btn-primary btn-sm';
+        listItem.appendChild(editBtn);
+
+        // Click event for Edit button to open the style editing modal
+        editBtn.onclick = function() {
+            currentLayerId = layerData.layer_id;
+            currentLayer = geoLayer;
+
+            // Populate the layer ID in the modal
+            document.getElementById('layerId').value = currentLayerId;
+
+            // Show the modal using Bootstrap 5 method
+            var myModal = new bootstrap.Modal(document.getElementById('styleModal'));
+            myModal.show();
+        };
+
+        // Show/hide button
+        const showHideBtn = document.createElement('button');
+        showHideBtn.textContent = 'Hide';
+        showHideBtn.className = 'btn btn-secondary btn-sm';
+        listItem.appendChild(showHideBtn);
+
+        // Remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = 'Remove';
+        removeBtn.className = 'btn btn-danger btn-sm';
+        listItem.appendChild(removeBtn);
+
+        // Toggle visibility of the layer
+        let visible = true;
+        showHideBtn.addEventListener('click', function() {
+            if (visible) {
+                map.removeLayer(geoLayer);
+                showHideBtn.textContent = 'Show';
+                visible = false;
+            } else {
+                map.addLayer(geoLayer);
+                showHideBtn.textContent = 'Hide';
+                visible = true;
+            }
+        });
+
+        // Remove layer from the map
+        removeBtn.addEventListener('click', function() {
+            map.removeLayer(geoLayer);
+            listItem.remove();
+        });
+
+        // Append the list item to the control panel
+        document.getElementById('layersList').appendChild(listItem);
+    }
+
+    // Load layers from the backend
+    function loadLayers() {
+        fetch('http://127.0.0.1:5000/layers')
+            .then(response => response.json())
+            .then(layers => {
+                layers.forEach(layer => {
+                    addLayerToMap(layer);
+                });
+            });
+    }
+
+    // Handle uploading a new GeoJSON file
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+        document.getElementById('geojsonFile').click();
+    });
+
+    document.getElementById('geojsonFile').addEventListener('change', function () {
+        const file = this.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('layer_name', file.name);
+
+            // Default styles for the new layer
+            const styles = {
+                fillColor: '#ff7800',
+                weight: 2,
+                color: '#000000',
+            };
+            formData.append('styles', JSON.stringify(styles));
+
+            // Upload GeoJSON to the server
+            fetch('http://127.0.0.1:5000/upload_geojson', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+                loadLayers();  // Reload layers after upload
+            });
+        }
+    });
+
+    // Handle saving styles
+    document.getElementById('saveStylesBtn').addEventListener('click', () => {
+        const fillColor = document.getElementById('fillColor').value;
+        const strokeColor = document.getElementById('strokeColor').value;
+        const weight = document.getElementById('weight').value;
+
+        const newStyles = {
+            fillColor: fillColor,
+            color: strokeColor,
+            weight: parseInt(weight),
+        };
+
+        // Update styles on the server
+        fetch('http://127.0.0.1:5000/update_styles', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                layer_id: currentLayerId,
+                styles: newStyles
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message);
+
+            // Update the styles on the map
+            currentLayer.setStyle(newStyles);
+
+            // Close the modal
+            $('#styleModal').modal('hide');
+        });
+    });
+
+    // Fetch the saved map view from MongoDB when the page loads
+    fetch('http://127.0.0.1:5000/get_map_view')
+    .then(response => response.json())
+    .then(data => {
+        // Set the map view to the saved values
+        map.setView([data.lat, data.lng], data.zoom);
+
+        // Populate the input fields with the saved values
+        document.getElementById('latInput').value = data.lat;
+        document.getElementById('lngInput').value = data.lng;
+        document.getElementById('zoomInput').value = data.zoom;
+    })
+    .catch(error => {
+        console.error('Error fetching map view:', error);
+    });
+
+    // Event listener for "Set Map View" button
+    document.getElementById('setViewBtn').addEventListener('click', function() {
+        const lat = parseFloat(document.getElementById('latInput').value);
+        const lng = parseFloat(document.getElementById('lngInput').value);
+        const zoom = parseInt(document.getElementById('zoomInput').value, 10);
+
+        // Validate input
+        if (isNaN(lat) || isNaN(lng) || isNaN(zoom)) {
+            alert('Please enter valid latitude, longitude, and zoom level.');
+            return;
+        }
+
+        // Set the map view based on the input values
+        map.setView([lat, lng], zoom);
+
+        // Send the updated map view to the backend to store in MongoDB
+        fetch('http://127.0.0.1:5000/update_map_view', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                lat: lat,
+                lng: lng,
+                zoom: zoom
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Map view updated:', data.message);
+        })
+        .catch(error => {
+            console.error('Error updating map view:', error);
+        });
+    });
+
+    // Initial load of layers
+    loadLayers();
+</script>
+
+</body>
+</html>
