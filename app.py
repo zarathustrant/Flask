@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from pymongo import MongoClient
 import json
@@ -16,7 +16,7 @@ map_view_collection = db['map_view']
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return send_file('index.html')
 
 # Store the latest location data
 latest_location = {}
