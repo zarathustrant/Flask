@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from pymongo import MongoClient
 import json
@@ -21,25 +21,10 @@ map_view_collection = db['map_view']
 # Store the latest location data
 latest_location = {}
 
-# Serve the index.html page with the latest location and GeoJSON layers
+# Serve the index.html page for the Leaflet map
 @app.route('/')
 def index():
-    # Fetch all layers and their GeoJSON data
-    layers = list(layers_collection.find())
-    
-    # Fetch the latest location
-    location = latest_location if latest_location else {'latitude': 6, 'longitude': 5}
-    
-    # Prepare the GeoJSON data to pass to the template
-    geojson_layers = []
-    for layer in layers:
-        geojson_layers.append({
-            'layer_name': layer['layer_name'],
-            'geojson_data': layer['geojson_data']
-        })
-    
-    # Render the template and pass the data (latest location and GeoJSON layers)
-    return render_template('index.html', location=location, geojson_layers=geojson_layers)
+    return send_file('index.html')
 
 # Route to receive location data from the iOS app (POST request)
 @app.route('/api/location', methods=['POST'])
