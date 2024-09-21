@@ -64,7 +64,7 @@
 
         // Fetch GeoJSON layers from the Flask API
         function fetchGeoJsonLayers() {
-            fetch('/api/geojson_layers')  // Fetching the GeoJSON layers from Flask
+            fetch('https://iosflask.onrender.com/api/geojson_layers')  // Fetching the GeoJSON layers from Flask
                 .then(response => response.json())
                 .then(data => {
                     data.forEach(layer => {
