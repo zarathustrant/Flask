@@ -1,0 +1,423 @@
+/* General styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+.container-fluid {
+    height: 100vh;
+}
+
+.sidebar {
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    padding: 15px;
+    height: 100vh;
+    overflow-y: auto; /* Allow scrolling within the sidebar */
+}
+
+#main {
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    
+}
+
+#mapContainer {
+    position: relative;
+    height: 100vh;
+    margin-left: 200px;
+    flex-grow: 1;
+    overflow-y: hidden;
+}
+
+#map {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+}
+
+.zoom-level {
+    background: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    z-index: 1000;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.zoom-in {
+    background: red;
+    cursor: pointer;
+}
+
+.MapControls {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+}
+
+.MapControls ion-icon {
+    font-size: 32px;
+    cursor: pointer;
+    background: white;
+    margin: 3px;
+}
+
+#mouse-position {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    z-index: 1000;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+}
+
+/* Content panel styles */
+#contentPanel {
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    padding: 20px;
+    height: 100%;
+    overflow-y: auto;
+    margin-left: 20px;
+}
+
+.neumorphism-search-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.neumorphism-search {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 50px;
+    border: none;
+    box-shadow: 5px 5px 15px #e0e0e0, -5px -5px 15px #ffffff;
+    font-size: 16px;
+    outline: none;
+    transition: box-shadow 0.3s ease;
+}
+
+.neumorphism-search:focus {
+    box-shadow: 5px 5px 15px #ccc, -5px -5px 15px #fff;
+}
+
+/* Analysis Controls */
+#analysisControls {
+    margin-top: 20px;
+}
+
+#analysisControls h5 {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 15px;
+}
+
+#analysisControls button {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+#analysisControls button:hover {
+    background-color: #0056b3;
+}
+
+#analysisControls button.btn-secondary {
+    background-color: #6c757d;
+}
+
+#analysisControls button.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Sidebar navigation */
+nav {
+    position: fixed;
+    width: 50px;
+    height: 100vh;
+    background: #282a36;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-y: hidden;
+    overflow-x: hidden;
+
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+nav ul li {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+}
+
+nav ul li.active,
+nav ul li:hover {
+    background: #44475a;
+}
+
+nav ul li.active ion-icon,
+nav ul li:hover ion-icon {
+    color: #6272a4;
+}
+
+nav ul li ion-icon {
+    font-size: 24px;
+    color: #f8f8f2;
+}
+
+.indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 6px;
+    background: #6272a4;
+    transition: 0.3s;
+}
+
+
+/* Custom file input style */
+.custom-file-input::-webkit-file-upload-button {
+    visibility: hidden;
+}
+
+.custom-file-input::before {
+    content: 'Select file';
+    display: inline-block;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 10px;
+    outline: none;
+    white-space: nowrap;
+    -webkit-user-select: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.custom-file-input:hover::before {
+    border-color: #007bff;
+}
+
+.custom-file-input:active::before {
+    background-color: #e9ecef;
+}
+
+/* Text Widget */
+.custom-text-widget {
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+}
+
+.custom-text-widget h1, .custom-text-widget p {
+    margin: 0;
+    padding: 0;
+}
+
+/* Custom View Control */
+.custom-view-control {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+}
+
+.custom-view-control label {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.custom-view-control input {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.custom-view-control button {
+    width: 100%;
+    font-size: 14px;
+    padding: 8px;
+}
+.layer-label {
+    padding: 2px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+    background-color: rgba(255, 255, 255, 0.8); /* default background color and opacity */
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.7); /* Darker backdrop for contrast */
+}
+
+/* Modal Styles */
+.modal-content {
+    background-color: #f9f9f9; /* Soft white background */
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
+    border: none; /* Remove default border */
+    overflow: hidden; /* Ensures rounded corners on all content */
+}
+
+.modal-header {
+    background-color: #ffffff; /* Slightly different shade for header */
+    border-bottom: none; /* Remove default border */
+    border-top-left-radius: 12px; /* Rounded corners for header */
+    border-top-right-radius: 12px; /* Rounded corners for header */
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header .modal-title {
+    font-weight: 600;
+    color: #333333; /* Darker text for contrast */
+}
+
+.modal-header .close {
+    font-size: 1.5rem;
+    color: #999999;
+    opacity: 0.7;
+    transition: color 0.2s, opacity 0.2s;
+}
+
+.modal-header .close:hover {
+    color: #666666;
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 20px;
+    font-size: 16px;
+    color: #555555; /* Softer text color */
+}
+
+.modal-footer {
+    background-color: #f1f1f1;
+    border-top: none; /* Remove default border */
+    padding: 10px 20px;
+    display: flex;
+    justify-content: flex-end;
+    border-bottom-left-radius: 12px; /* Rounded corners for footer */
+    border-bottom-right-radius: 12px; /* Rounded corners for footer */
+}
+
+/* Buttons */
+.modal-footer .btn {
+    background-color: #007aff; /* macOS blue button color */
+    border: none; /* Remove default border */
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.modal-footer .btn:hover {
+    background-color: #005bb5;
+}
+
+/* Category Row Styles */
+.category-row {
+    border-radius: 6px;
+    background-color: #f5f5f5;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.category-row .category-value {
+    font-weight: 500;
+    color: #333;
+    margin-right: 10px;
+}
+
+.category-row .category-color {
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    margin-right: 10px;
+}
+
+.category-row .remove-category {
+    background-color: #ff3b30;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.category-row .remove-category:hover {
+    background-color: #d32f2f;
+}
+
+/* Additional Styling for Form Elements */
+#editLayerForm input,
+#editLayerForm select,
+#editLayerForm button {
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#editLayerForm input:focus,
+#editLayerForm select:focus,
+#editLayerForm button:focus {
+    border-color: #007aff;
+    box-shadow: 0 0 8px rgba(0, 122, 255, 0.3);
+    outline: none;
+}
+
+/* Tooltip Styling for Labels */
+.label-tooltip {
+    background-color: #ffffff !important;
+    color: #333333 !important;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 6px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
